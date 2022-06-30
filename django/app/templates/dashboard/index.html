@@ -1,0 +1,89 @@
+<head>  
+	<meta charset="UTF-8">  
+	<title>Notifier</title>  
+	{% load static %}  
+	<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">  
+	<script>
+    setInterval(function() {
+      fetch('http://localhost:3000/context').then((res)=>res.json()).then((res)=>{
+          document.getElementById('status').innerHTML = res.services.status;
+          document.getElementById('boot_time').innerHTML = res.system.boot_time
+          document.getElementById('total_bytes_sent').innerHTML = res.network.total_bytes_sent
+          document.getElementById('total_bytes_received').innerHTML = res.network.total_bytes_received
+          document.getElementById('memory_usage').innerHTML = res.cpu.memory_usage +' %' 
+          document.getElementById('cpu_usage').innerHTML = res.cpu.cpu_usage +' %'
+          document.getElementById('mem_available').innerHTML = res.memory.available
+          document.getElementById('mem_used').innerHTML = res.memory.used
+          document.getElementById('mem_percentage').innerHTML = res.memory.percentage + ' %'
+          document.getElementById('disk_free').innerHTML = res.disk.free
+          document.getElementById('disk_used').innerHTML = res.disk.used
+          document.getElementById('disk_percentage').innerHTML = res.disk.percentage + ' %'
+        })
+    }, 1000);
+    </script>  
+</head>
+{% block content %}
+<body style="background-color:#EDF2F7;">
+<div style="margin: 30px;">
+<h1 style="margin-left: 550px; color: #2C5282;">Dashboard</h1>
+<table class="table table-bordered">
+  <tbody>
+    <tr style="background-color: #FEEBC8;">
+      <td><h5><u>Monitoring Services Information</u></h5></td>
+      <td><h5><u>System Information</u></h5></td>
+      <td><h5><u>Network Information</u></h5></td>
+    </tr>
+    <tr style="background-color: #FFF5F5;">
+      <td style="border-top:none;">
+        <p>Service Live Status: <u id="status">{{services.status}}</u></p>
+        <p>Service Name: <u>{{services.name}}</u></p>
+        <p>Service Process: <u>{{services.proc}}</u></p>
+        <p>Service Restart Command: <u>{{services.restart}}</u></p>
+      </td>
+      <td>
+        <p>System: <u>{{system.system}}</u></p>
+        <p>Node name: <u>{{system.node_name}}</u></p>
+        <p>Release: <u>{{system.release}}</u></p>
+        <p>Machine: <u>{{system.machine}}</u></p>
+        <p>Processor: <u>{{system.processor}}</u></p>
+        <p>Processor Brand: <u>{{system.processor_brand}}</u></p>
+        <p>Boot Time: <u id="boot_time">{{system.boot_time}}</u></p>
+      </td>
+      <td>
+        <p>IP Adress: <u>{{network.ip_address}}</u></p>
+        <p>MAC Address: <u>{{network.mac_address}}</u></p>
+        <p>Total Bytes Sent: <u id="total_bytes_sent">{{network.total_bytes_sent}}</u></p>
+        <p>Total Bytes Received: <u id="total_bytes_received">{{network.total_bytes_received}}</u></p>
+      </td>
+    </tr>
+    <tr style="background-color: #FEEBC8;">
+      <td><h5><u>CPU Information</u></h5></td>
+      <td><h5><u>Memory Information</u></h5></td>
+      <td><h5><u>Disk Information</u></h5></td>
+    </tr>
+    <tr style="background-color: #FFF5F5;">
+      <td>
+        <p>CPU Usage: <u id="cpu_usage">{{cpu.cpu_usage}} %</u></p>
+        <p>Memory Usage: <u id="memory_usage">{{cpu.memory_usage}} %</u></p>
+        <p>Physical Cores: <u>{{cpu.physical_cores}}</u></p>
+        <p>Total Cores: <u>{{cpu.total_cores}}</u></p>
+      </td>
+      <td>
+        <p>Total Memory: <u>{{memory.total}}</u></p>
+        <p>Available Memory: <u id="mem_available">{{memory.available}}</u></p>
+        <p>Used Memory: <u id="mem_used">{{memory.used}}</u></p>
+        <p>Memory Usage: <u id="mem_percentage">{{memory.percentage}} %</u></p>
+      </td>
+      <td>
+        <p>Total Disk: <u>{{disk.total}}</u></p>
+        <p>Available Disk: <u id="disk_free">{{disk.free}}</u></p>
+        <p>Used Disk: <u id="disk_used">{{disk.used}}</u></p>
+        <p>Disk Usage: <u id="disk_percentage">{{disk.percentage}} %</u></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h4 style="margin-left:30px">Add your services and twilio configurations using this <a href="/form">form.</a></h4>
+</body>
+{% endblock %}

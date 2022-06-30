@@ -1,0 +1,15 @@
+[
+    {
+        "service_name": "Node",
+        "service_proc": "node",
+        "service_restart_command": "node app.js"
+    },
+    {
+        "accountSid": "AC9454cc41b6629f250432dc0087e3b879",
+        "authToken": "3ecd9f5f33bf503a846bd84c56b618b0",
+        "messagingServiceSid": "MG2a48718b8f21f7eecd169af0b63d2d92",
+        "twilio_phone_number1": "+917997207696",
+        "twilio_phone_number2": "+919110565212",
+        "twilio_interval": 2
+    }
+]

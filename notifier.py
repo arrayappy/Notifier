@@ -1,16 +1,14 @@
 #!/usr/bin/python
 import psutil
 import time
-import configparser
 from subprocess import call, STDOUT
-import signal
 import sys
-import json
 import os
 import requests
 import subprocess
-from sms import send_sms
+from sms.sms import send_sms
 requests.packages.urllib3.disable_warnings()
+from config_loader import config_loader
 
 if os.geteuid() == 0:
     print("Thanks for root previlages!")
@@ -18,20 +16,13 @@ else:
     print("Hey, You are not a root please enter your password.")
     subprocess.call(['sudo', 'python3'] + sys.argv)
     sys.exit()
-
-
 print( "[+] Starting Process monitor")
-
 print ("[-] Loading config file")
-Config = configparser.ConfigParser()
-Config.read("config.ini")
-INTERVAL = int(Config.get('Other', 'Interval'))  #Check every n seconds
-FNULL = open(os.devnull, 'w')
-
 #Read service monitoring file
-print ("[-] Loading Services file")
-with open('services.json') as json_data:
-    SERVICES = json.load(json_data)
+listObj=config_loader()
+SERVICES = [{ 'name': listObj[0]['service_name'], 'proc': listObj[0]['service_proc'] , 'restart':listObj[0]['service_restart_command'] }]
+INTERVAL = int(listObj[1]['twilio_interval'])
+FNULL = open(os.devnull, 'w')
 
 def isRunning(name):
   #"Check if a process name is running"
@@ -45,26 +36,29 @@ def main():
     #Inital pass through file to make sure services are running
     for s in SERVICES:
         if not isRunning(s.get("proc")):
-          print( "[!] At least one service in your services.json is not already running. Please ensure services are already running before starting.")
+          print( "[!] At least one service in your config.json is not already running. Please ensure services are already running before starting.")
           exit(1)
 
     while True:
-      mem = int(psutil.virtual_memory().percent) #Percent mem used
-      cpu = int(  
+      mem = int(psutil.virtual_memory()[2]) #Percent mem used
+      cpu = int(psutil.cpu_percent())
+      partitions = psutil.disk_partitions()
+      partition_usage = psutil.disk_usage(partitions[0].mountpoint)
+      storage_percentage = 100-int(partition_usage.percent)
       for s in SERVICES:
         name, proc, restart = s.get("name"), s.get("proc"), s.get("restart")
         if not isRunning(proc):
           print ("[*] {} has stopped. Dispatching SMS.".format(name))
+          # print("[+] Restarted service successfully")
           if restart:
-            msg="Dear Sir/Madam,\n{} has stopped... \n\n CPU Load: {} \n\n RAM Load: {}".format(name,cpu,mem)
-           # print(msg)
+            msg="From notifier!\n{} has stopped... \n\n CPU Percentage: {}% \n RAM Percentage: {}% \n Available Storage: {}%".format(name,cpu,mem,storage_percentage)
+            # print(msg)
             send_sms(msg)
-            #time.sleep(10)
-            time.sleep(30)
-            r = call(restart.split(), stdout=FNULL, stderr=STDOUT)
+            time.sleep(10)
+            call(restart.split(), stdout=FNULL, stderr=STDOUT)
             if isRunning(proc):
                msg ="Successfully restarted {}, you owe me".format(name)
-              # print(msg)
+               # print(msg)
                send_sms(msg)
                print ("[-] Successfully restarted {}" .format( name))
             else:
@@ -73,10 +67,9 @@ def main():
                send_sms(msg)
                print ("[-] Failed to restart {}".format(name))
           else:
-            msg="Dear Human,\n\n has stopped. I will not attempt a restart{}.\n\nCPU load:{} \nRAM load: {} \n\nLove,\nYour Server".format(name,cpu,mem)
+            msg="Service has stopped. I will not attempt a restart{}.\n\nCPU load:{} \nRAM load: {} \n\nLove,\nYour Server".format(name,cpu,mem)
             print(msg)
             send_sms(msg)
-
       time.sleep(INTERVAL)
 
 if __name__ == "__main__":
